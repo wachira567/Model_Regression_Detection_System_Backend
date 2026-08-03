@@ -6,6 +6,7 @@ from app.models.drift_snapshot import DriftSnapshot
 from app.models.user import User
 from app.models.organization import Organization
 from app.models.organization_user import OrganizationUser
+from app.models.otp import OneTimePassword
 
 __all__ = [
     "Base",
@@ -15,5 +16,6 @@ __all__ = [
     "DriftSnapshot",
     "User",
     "Organization",
-    "OrganizationUser"
+    "OrganizationUser",
+    "OneTimePassword"
 ]
