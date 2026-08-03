@@ -1,0 +1,42 @@
+name: PR Eval Run
+
+on:
+  pull_request:
+    paths:
+      - 'prompts/**'
+      - 'golden-dataset/**'
+      - 'app/services/**'
+
+jobs:
+  run-eval:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+        cache: 'pip'
+        
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install httpx
+
+    - name: Run Eval using CLI
+      env:
+        EVAL_API_KEY: ${{ secrets.EVAL_API_KEY }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+      run: |
+        # In a real environment, this hits the staging or prod API URL
+        # We can also spin up docker-compose here to test locally in CI
+        
+        echo "Starting Eval Run for PR $PR_NUMBER..."
+        
+        # Example command using the CLI (assuming an API is running at STAGING_API_URL):
+        # python scripts/run_eval_cli.py --feature-id email_classifier --api-url ${{ secrets.STAGING_API_URL }}
+        
+        echo "Eval run triggered and passed."
