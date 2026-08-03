@@ -56,3 +56,6 @@ dev = [
     "factory-boy>=3.3.0",       # Test factories
     "deepeval>=1.0.0",          # LLM eval framework
 ]
+
+[tool.setuptools]
+packages = ["app"]
