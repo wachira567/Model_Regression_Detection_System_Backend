@@ -2,6 +2,7 @@
 FROM python:3.11-slim as builder
 WORKDIR /build
 COPY pyproject.toml .
+COPY app/ ./app/
 RUN pip install --no-cache-dir --prefix=/install .
 
 # --- Stage 2: Production ---
