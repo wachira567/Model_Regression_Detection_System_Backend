@@ -14,8 +14,8 @@ COPY alembic/ ./alembic/
 COPY alembic.ini .
 
 # Copy prompts and dataset (baked into image for CI/CD runs)
-COPY ../prompts/ ./prompts/
-COPY ../golden-dataset/ ./golden-dataset/
+COPY prompts/ ./prompts/
+COPY golden-dataset/ ./golden-dataset/
 
 RUN mkdir -p /app/reports && chown app:app /app/reports
 USER app

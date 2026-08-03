@@ -46,6 +46,12 @@ class Settings(BaseSettings):
     GITHUB_TOKEN: SecretStr | None = None
     GITHUB_WEBHOOK_SECRET: SecretStr | None = None
 
+    model_config = SettingsConfigDict(
+        env_file=".env", 
+        env_file_encoding="utf-8", 
+        extra="ignore"
+    )
+
     # --- Validators ---
     @field_validator("API_SECRET_KEY")
     @classmethod
@@ -72,7 +78,5 @@ class Settings(BaseSettings):
         if not val.startswith("https://hooks.slack.com/"):
             raise ValueError("SLACK_WEBHOOK_URL must be a valid Slack webhook URL")
         return v
-
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 settings = Settings()

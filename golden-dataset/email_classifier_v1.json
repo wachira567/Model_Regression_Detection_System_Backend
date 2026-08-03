@@ -1,0 +1,25 @@
+{
+  "dataset_id": "email_classifier_golden",
+  "version": "1.0.0",
+  "created_at": "2026-08-03T00:00:00Z",
+  "feature_id": "email_classifier",
+  "description": "Hand-curated test cases for the email classifier feature.",
+  "test_cases": [
+    {
+      "id": "TC001",
+      "input": { "email_text": "I was charged $49.99 but my plan is $29.99. Please fix this." },
+      "expected_output": { "category": "billing", "summary": "Customer reports being overcharged compared to their plan price." },
+      "difficulty": "easy",
+      "tags": ["billing", "overcharge"],
+      "notes": "Clear billing issue with specific dollar amounts."
+    },
+    {
+      "id": "TC002",
+      "input": { "email_text": "ur app sux cant even login smh" },
+      "expected_output": { "category": "account", "summary": "Customer is unable to log into their account." },
+      "difficulty": "hard",
+      "tags": ["account", "typos", "slang", "ambiguous"],
+      "notes": "Edge case: heavy slang and typos. Could be 'technical' but login is an account issue."
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+id: "email_classifier"
+version: "1.0.0"
+created_at: "2026-08-03T00:00:00Z"
+author: "team"
+description: "Classifies customer support emails into categories with a summary."
+
+model: "gpt-4o-mini"
+temperature: 0.0
+max_tokens: 256
+
+system_prompt: |
+  You are a customer support email classifier. Given a customer email,
+  you must return a JSON object with exactly two fields:
+  - "category": one of ["billing", "technical", "account", "general"]
+  - "summary": a single sentence summarizing the customer's issue.
+
+  Rules:
+  - If the email could belong to multiple categories, choose the PRIMARY category.
+  - If the email is unintelligible, use category "general" and summarize as best you can.
+  - Always respond with valid JSON. No markdown, no extra text.
+
+few_shot_examples:
+  - input: "Hi, I was charged twice for my subscription this month. Can you refund the extra charge?"
+    output: '{"category": "billing", "summary": "Customer requests a refund for a duplicate subscription charge."}'
+  - input: "The app keeps crashing when I try to upload files larger than 10MB."
+    output: '{"category": "technical", "summary": "Customer reports app crashes during large file uploads."}'
+
+input_schema:
+  type: "object"
+  properties:
+    email_text:
+      type: "string"
+      description: "The full text of the customer email"
+  required: ["email_text"]
+
+output_schema:
+  type: "object"
+  properties:
+    category:
+      type: "string"
+      enum: ["billing", "technical", "account", "general"]
+    summary:
+      type: "string"
+  required: ["category", "summary"]
