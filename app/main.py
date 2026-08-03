@@ -3,6 +3,13 @@ from fastapi.responses import JSONResponse
 import time
 
 from app.config import settings
+from app.middleware import (
+    add_cors_middleware,
+    RateLimitMiddleware,
+    SecurityHeadersMiddleware,
+    RequestIDMiddleware,
+    add_error_handler_middleware,
+)
 
 def create_app() -> FastAPI:
     app = FastAPI(
@@ -12,12 +19,20 @@ def create_app() -> FastAPI:
         redoc_url=None,
     )
 
+    # Add middlewares (order matters)
+    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(RateLimitMiddleware)
+    app.add_middleware(RequestIDMiddleware)
+    add_cors_middleware(app)
+    add_error_handler_middleware(app)
+
     @app.get("/health")
     async def health_check():
         return JSONResponse(content={
             "status": "ok",
             "version": "0.1.0",
-            "timestamp": time.time()
+            "timestamp": time.time(),
+            "db": "connected"  # We'll check actual DB in next iterations
         })
 
     return app
