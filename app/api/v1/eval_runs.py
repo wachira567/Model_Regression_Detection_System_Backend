@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func, or_
 from app.db.session import get_db
 from app.models.eval_run import EvalRun
+from app.schemas.pagination import PaginatedResponse
 from app.models.eval_result import EvalResult
 from app.services.diff_engine import DiffEngine
 import uuid
@@ -12,10 +13,42 @@ from app.dependencies import get_current_org
 router = APIRouter()
 
 @router.get("/")
-async def list_eval_runs(limit: int = 10, db: AsyncSession = Depends(get_db), org_id: str = Depends(get_current_org)):
-    stmt = select(EvalRun).where(EvalRun.organization_id == org_id).order_by(EvalRun.created_at.desc()).limit(limit)
+async def list_eval_runs(
+    page: int = Query(1, ge=1),
+    size: int = Query(10, ge=1, le=100),
+    search: str | None = Query(None),
+    db: AsyncSession = Depends(get_db), 
+    org_id: str = Depends(get_current_org)
+):
+    offset = (page - 1) * size
+    
+    stmt = select(EvalRun).where(EvalRun.organization_id == org_id)
+    count_stmt = select(func.count(EvalRun.id)).where(EvalRun.organization_id == org_id)
+    
+    if search:
+        search_filter = or_(
+            EvalRun.status.ilike(f"%{search}%"),
+            EvalRun.trigger_type.ilike(f"%{search}%")
+        )
+        stmt = stmt.where(search_filter)
+        count_stmt = count_stmt.where(search_filter)
+
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar()
+    
+    stmt = stmt.order_by(EvalRun.created_at.desc()).offset(offset).limit(size)
     result = await db.execute(stmt)
-    return result.scalars().all()
+    runs = result.scalars().all()
+    
+    pages = (total + size - 1) // size
+    
+    return {
+        "items": runs,
+        "total": total,
+        "page": page,
+        "size": size,
+        "pages": pages
+    }
 
 @router.get("/{run_id}")
 async def get_eval_run(run_id: str, db: AsyncSession = Depends(get_db), org_id: str = Depends(get_current_org)):
