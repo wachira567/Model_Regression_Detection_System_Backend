@@ -30,6 +30,7 @@ dependencies = [
     # Security
     "python-jose[cryptography]>=3.3.0",  # JWT handling
     "passlib[bcrypt]>=1.7.4",
+    "google-auth>=2.20.0",               # Google OAuth validation
 
     # Reporting
     "jinja2>=3.1.0",            # HTML report templates

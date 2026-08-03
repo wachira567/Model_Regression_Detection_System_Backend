@@ -7,14 +7,17 @@ from app.models.eval_run import EvalRun
 from app.services.eval_engine import execute_eval_run
 import uuid
 
+from app.dependencies import get_current_org
+
 router = APIRouter()
 
 @router.post("/run/{feature_id}")
-async def trigger_eval_run(feature_id: str, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+async def trigger_eval_run(feature_id: str, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db), org_id: str = Depends(get_current_org)):
     # Get active prompt config
     stmt = select(PromptConfig).where(
         PromptConfig.feature_id == feature_id,
-        PromptConfig.is_active == True
+        PromptConfig.is_active == True,
+        PromptConfig.organization_id == org_id
     ).order_by(PromptConfig.created_at.desc()).limit(1)
     
     result = await db.execute(stmt)
@@ -25,6 +28,7 @@ async def trigger_eval_run(feature_id: str, background_tasks: BackgroundTasks, d
         
     eval_run = EvalRun(
         prompt_config_id=prompt_config.id,
+        organization_id=org_id,
         dataset_version="latest",  # Simplification for now
         trigger_type="manual",
         status="pending"

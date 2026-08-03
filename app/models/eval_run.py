@@ -9,6 +9,7 @@ class EvalRun(Base):
     __tablename__ = "eval_runs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id = Column(String, ForeignKey("organizations.id", ondelete="CASCADE"), index=True, nullable=False, default="default_org")
     prompt_config_id = Column(UUID(as_uuid=True), ForeignKey("prompt_configs.id"), nullable=False, index=True)
     dataset_version = Column(String, nullable=False)
     trigger_type = Column(String, nullable=False) # manual | ci | scheduled
