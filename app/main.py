@@ -10,6 +10,7 @@ from app.middleware import (
     RequestIDMiddleware,
     add_error_handler_middleware,
 )
+from app.api.router import router as api_router
 
 def create_app() -> FastAPI:
     app = FastAPI(
@@ -25,6 +26,8 @@ def create_app() -> FastAPI:
     app.add_middleware(RequestIDMiddleware)
     add_cors_middleware(app)
     add_error_handler_middleware(app)
+    
+    app.include_router(api_router)
 
     @app.get("/health")
     async def health_check():
