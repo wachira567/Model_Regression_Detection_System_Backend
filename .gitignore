@@ -29,3 +29,6 @@ Thumbs.db
 
 # Reports (generated)
 backend/reports/*.html
+
+.env.*
+!.env.example
