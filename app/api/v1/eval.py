@@ -4,7 +4,7 @@ from sqlalchemy import select
 from app.db.session import get_db
 from app.models.prompt_config import PromptConfig
 from app.models.eval_run import EvalRun
-from app.services.eval_task import execute_eval_run
+from app.services.eval_engine import execute_eval_run
 import uuid
 
 router = APIRouter()

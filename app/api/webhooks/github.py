@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, HTTPException, BackgroundTasks, Depends
 import hmac
 import hashlib
 from app.config import settings
-from app.services.eval_task import execute_eval_run
+from app.services.eval_engine import execute_eval_run
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.models.eval_run import EvalRun
