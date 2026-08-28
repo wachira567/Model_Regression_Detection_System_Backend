@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from app.services.dataset_loader import DatasetLoader, GoldenDatasetData
 from app.config import settings
 from app.schemas.pagination import PaginatedResponse
+from app.db.session import get_db
 
 router = APIRouter()
 dataset_loader = DatasetLoader(settings.GOLDEN_DATASET_DIR)
@@ -54,3 +55,15 @@ async def get_datasets_for_feature(
         "size": size,
         "pages": pages
     }
+
+@router.post("/{feature_id}/bootstrap")
+async def bootstrap_dataset(
+    feature_id: str,
+    days_back: int = 7,
+    max_cases: int = 50,
+    db = Depends(get_db)
+):
+    from app.services.dataset_bootstrap_engine import DatasetBootstrapEngine
+    engine = DatasetBootstrapEngine(db)
+    result = await engine.bootstrap_from_logs(feature_id, days_back, max_cases)
+    return result

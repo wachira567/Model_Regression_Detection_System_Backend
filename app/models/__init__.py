@@ -10,6 +10,7 @@ from app.models.otp import OneTimePassword
 from app.models.experiment import Experiment
 from app.models.experiment_variant import ExperimentVariant
 from app.models.experiment_assignment import ExperimentAssignment
+from app.models.production_log import ProductionLog
 
 __all__ = [
     "Base",
@@ -23,5 +24,6 @@ __all__ = [
     "OneTimePassword",
     "Experiment",
     "ExperimentVariant",
-    "ExperimentAssignment"
+    "ExperimentAssignment",
+    "ProductionLog"
 ]
