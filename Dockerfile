@@ -22,7 +22,7 @@ RUN mkdir -p /app/reports && chown app:app /app/reports
 USER app
 
 EXPOSE 8000
-CMD exec gunicorn --bind :${PORT:-8000} \
+CMD alembic upgrade head && exec gunicorn --bind :${PORT:-8000} \
     --workers 1 --threads 8 --timeout 120 \
     app.main:app -k uvicorn.workers.UvicornWorker
 

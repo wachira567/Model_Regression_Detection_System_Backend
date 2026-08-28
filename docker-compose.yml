@@ -35,13 +35,13 @@ services:
 
   frontend:
     build:
-      context: ../frontend
+      context: ../Model_Regression_Detection_System_Frontend
       dockerfile: Dockerfile.dev
     container_name: mrd_frontend
     ports:
       - "5173:5173"
     volumes:
-      - ../frontend:/app
+      - ../Model_Regression_Detection_System_Frontend:/app
       - /app/node_modules
     env_file:
       - .env
