@@ -18,13 +18,14 @@ COPY alembic.ini .
 COPY prompts/ ./prompts/
 COPY golden-dataset/ ./golden-dataset/
 
-RUN mkdir -p /app/reports && chown app:app /app/reports
+COPY start.sh .
+RUN chmod +x start.sh
+
+RUN mkdir -p /app/reports && chown app:app /app/reports && chown app:app start.sh
 USER app
 
 EXPOSE 8000
-CMD alembic upgrade head && exec gunicorn --bind :${PORT:-8000} \
-    --workers 1 --threads 8 --timeout 120 \
-    app.main:app -k uvicorn.workers.UvicornWorker
+CMD ["./start.sh"]
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${PORT:-8000}/health')"
