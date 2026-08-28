@@ -111,6 +111,40 @@ async def execute_eval_run(eval_run_id: str):
                 
                 session.add(res_obj)
 
+            # --- Simulating Experiment Assignments for A/B Testing ---
+            # Check if this eval run is for an active experiment variant
+            from app.models.experiment import Experiment, ExperimentStatus
+            from app.models.experiment_variant import ExperimentVariant
+            from app.models.experiment_assignment import ExperimentAssignment
+            
+            active_exp = await session.execute(
+                select(Experiment).where(
+                    Experiment.feature_id == prompt_config.feature_id,
+                    Experiment.status == ExperimentStatus.RUNNING.value
+                ).limit(1)
+            )
+            experiment = active_exp.scalar_one_or_none()
+            if experiment:
+                active_var = await session.execute(
+                    select(ExperimentVariant).where(
+                        ExperimentVariant.experiment_id == experiment.id,
+                        ExperimentVariant.prompt_config_id == prompt_config.id
+                    ).limit(1)
+                )
+                variant = active_var.scalar_one_or_none()
+                if variant:
+                    import hashlib
+                    for tc in target_dataset.test_cases:
+                        # Create deterministic hash from test case input
+                        req_hash = hashlib.sha256(str(tc.input).encode('utf-8')).hexdigest()
+                        assignment = ExperimentAssignment(
+                            experiment_id=experiment.id,
+                            variant_id=variant.id,
+                            request_hash=req_hash,
+                            eval_run_id=eval_run.id
+                        )
+                        session.add(assignment)
+
             total_cases = len(target_dataset.test_cases)
             eval_run.total_cases = total_cases
             eval_run.passed_cases = passed
