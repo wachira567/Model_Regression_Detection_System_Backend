@@ -14,7 +14,7 @@ class Settings(BaseSettings):
 
     # --- Security ---
     API_SECRET_KEY: SecretStr          # Used to hash/validate API keys
-    ALLOWED_ORIGINS: list[str] = ["http://localhost:5173"]
+    ALLOWED_ORIGINS: str | list[str] = ["http://localhost:5173"]
     RATE_LIMIT_PER_MINUTE: int = 60   # Per-IP rate limit
     RATE_LIMIT_EVAL_PER_HOUR: int = 10  # Eval trigger rate limit
     ENVIRONMENT: str = "development"
@@ -59,8 +59,9 @@ class Settings(BaseSettings):
     @classmethod
     def assemble_cors_origins(cls, v: str | list[str]) -> list[str]:
         if isinstance(v, str):
-            if not v.startswith("["):
-                return [i.strip() for i in v.split(",") if i.strip()]
+            # Strip brackets, single quotes, double quotes, and whitespace
+            v = v.replace("[", "").replace("]", "").replace("'", "").replace('"', "")
+            return [i.strip() for i in v.split(",") if i.strip()]
         return v
 
     @field_validator("API_SECRET_KEY")
