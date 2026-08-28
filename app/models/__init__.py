@@ -14,6 +14,7 @@ from app.models.production_log import ProductionLog
 from app.models.routing_decision import RoutingDecision
 from app.models.feature_flag import FeatureFlag
 from app.models.trace import Trace
+from app.models.semantic_cache import SemanticCache
 
 __all__ = [
     "Base",
@@ -31,5 +32,6 @@ __all__ = [
     "ProductionLog",
     "RoutingDecision",
     "FeatureFlag",
-    "Trace"
+    "Trace",
+    "SemanticCache"
 ]

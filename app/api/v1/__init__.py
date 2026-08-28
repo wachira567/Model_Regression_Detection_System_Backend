@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from app.api.v1 import prompts, datasets, eval, eval_runs, reports, auth, admin, experiments, logs, autopilot, flags, traces
+from app.api.v1 import prompts, datasets, eval, eval_runs, reports, auth, admin, experiments, logs, autopilot, flags, traces, cache
 from app.dependencies import get_current_org
 
 api_router = APIRouter()
@@ -13,5 +13,6 @@ api_router.include_router(logs.router, tags=["logs"], dependencies=[Depends(get_
 api_router.include_router(autopilot.router, dependencies=[Depends(get_current_org)])
 api_router.include_router(flags.router, dependencies=[Depends(get_current_org)])
 api_router.include_router(traces.router, dependencies=[Depends(get_current_org)])
+api_router.include_router(cache.router, dependencies=[Depends(get_current_org)])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
