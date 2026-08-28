@@ -11,6 +11,7 @@ from app.models.experiment import Experiment
 from app.models.experiment_variant import ExperimentVariant
 from app.models.experiment_assignment import ExperimentAssignment
 from app.models.production_log import ProductionLog
+from app.models.routing_decision import RoutingDecision
 
 __all__ = [
     "Base",
@@ -25,5 +26,6 @@ __all__ = [
     "Experiment",
     "ExperimentVariant",
     "ExperimentAssignment",
-    "ProductionLog"
+    "ProductionLog",
+    "RoutingDecision"
 ]
