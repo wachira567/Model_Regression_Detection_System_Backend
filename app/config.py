@@ -54,6 +54,14 @@ class Settings(BaseSettings):
     )
 
     # --- Validators ---
+    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: str | list[str]) -> list[str]:
+        if isinstance(v, str):
+            if not v.startswith("["):
+                return [i.strip() for i in v.split(",") if i.strip()]
+        return v
+
     @field_validator("API_SECRET_KEY")
     @classmethod
     def validate_api_key_not_placeholder(cls, v: SecretStr) -> SecretStr:
