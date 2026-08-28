@@ -13,8 +13,11 @@ from app.models.experiment_assignment import ExperimentAssignment
 from app.models.production_log import ProductionLog
 from app.models.routing_decision import RoutingDecision
 from app.models.feature_flag import FeatureFlag
+from app.models.dataset import Dataset, DatasetItem
 from app.models.trace import Trace
 from app.models.semantic_cache import SemanticCache
+from app.models.invitation import Invitation
+from app.models.project import Project
 
 __all__ = [
     "Base",
@@ -32,6 +35,10 @@ __all__ = [
     "ProductionLog",
     "RoutingDecision",
     "FeatureFlag",
+    "Dataset",
+    "DatasetItem",
     "Trace",
-    "SemanticCache"
+    "SemanticCache",
+    "Invitation",
+    "Project"
 ]
