@@ -97,6 +97,27 @@ async def elevate_user(
     status = "elevated to Super Admin" if user.is_superadmin else "demoted to normal user"
     return {"message": f"User {user.email} successfully {status}"}
 
+@router.delete("/users/{user_id}")
+async def delete_user(
+    user_id: str,
+    admin: User = Depends(get_super_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    if user_id == admin.id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account via this endpoint")
+        
+    stmt = select(User).where(User.id == user_id)
+    result = await db.execute(stmt)
+    user = result.scalars().first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    await db.delete(user)
+    await db.commit()
+    
+    return {"message": f"User {user.email} successfully deleted"}
+
 @router.get("/stats")
 async def get_platform_stats(
     admin: User = Depends(get_super_admin),

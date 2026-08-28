@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Query, Depends, UploadFile, File, HTTPException
+import json
+import os
 from app.services.dataset_loader import DatasetLoader, GoldenDatasetData
 from app.config import settings
 from app.schemas.pagination import PaginatedResponse
@@ -67,3 +69,25 @@ async def bootstrap_dataset(
     engine = DatasetBootstrapEngine(db)
     result = await engine.bootstrap_from_logs(feature_id, days_back, max_cases)
     return result
+
+@router.post("/upload")
+async def upload_dataset(file: UploadFile = File(...)):
+    if not file.filename.endswith(".json"):
+        raise HTTPException(status_code=400, detail="Only JSON files are allowed")
+    
+    content = await file.read()
+    try:
+        data = json.loads(content)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON file")
+        
+    if "feature_id" not in data or "dataset_id" not in data:
+        raise HTTPException(status_code=400, detail="Dataset must contain feature_id and dataset_id")
+        
+    os.makedirs(settings.GOLDEN_DATASET_DIR, exist_ok=True)
+    file_path = os.path.join(settings.GOLDEN_DATASET_DIR, file.filename)
+    
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=2)
+        
+    return {"message": "Dataset uploaded successfully", "filename": file.filename}
