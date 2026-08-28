@@ -7,6 +7,9 @@ from app.models.user import User
 from app.models.organization import Organization
 from app.models.organization_user import OrganizationUser
 from app.models.otp import OneTimePassword
+from app.models.experiment import Experiment
+from app.models.experiment_variant import ExperimentVariant
+from app.models.experiment_assignment import ExperimentAssignment
 
 __all__ = [
     "Base",
@@ -17,5 +20,8 @@ __all__ = [
     "User",
     "Organization",
     "OrganizationUser",
-    "OneTimePassword"
+    "OneTimePassword",
+    "Experiment",
+    "ExperimentVariant",
+    "ExperimentAssignment"
 ]
