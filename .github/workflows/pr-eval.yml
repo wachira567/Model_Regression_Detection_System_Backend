@@ -25,18 +25,31 @@ jobs:
         python -m pip install --upgrade pip
         pip install httpx
 
+    - name: Spin up Local Environment
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        API_SECRET_KEY: "test_secret_key_needs_to_be_32_chars_long_for_jwt_validation"
+      run: |
+        echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env
+        echo "API_SECRET_KEY=$API_SECRET_KEY" >> .env
+        echo "DATABASE_URL=postgresql+asyncpg://eval:eval_password@db:5432/eval_db" >> .env
+        docker compose up -d db backend
+        
+        echo "Waiting for backend to be healthy..."
+        for i in {1..30}; do
+          if curl -s http://localhost:8000/health | grep -q "ok"; then
+            echo "Backend is up!"
+            break
+          fi
+          echo "Waiting..."
+          sleep 2
+        done
+
     - name: Run Eval using CLI
       env:
-        EVAL_API_KEY: ${{ secrets.EVAL_API_KEY }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         PR_NUMBER: ${{ github.event.pull_request.number }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
       run: |
-        # In a real environment, this hits the staging or prod API URL
-        # We can also spin up docker-compose here to test locally in CI
-        
         echo "Starting Eval Run for PR $PR_NUMBER..."
-        
-        # Example command using the CLI (assuming an API is running at STAGING_API_URL):
-        # python scripts/run_eval_cli.py --feature-id email_classifier --api-url ${{ secrets.STAGING_API_URL }}
-        
-        echo "Eval run triggered and passed."
+        python scripts/run_eval_cli.py --feature-id email_classifier --api-url http://localhost:8000

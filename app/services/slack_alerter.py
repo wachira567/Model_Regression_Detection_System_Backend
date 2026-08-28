@@ -1,5 +1,6 @@
 import httpx
 import logging
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from app.config import settings
 from app.services.diff_engine import DiffReport
 
@@ -63,9 +64,19 @@ class SlackAlerter:
         payload = {"blocks": blocks}
         
         try:
-            async with httpx.AsyncClient() as client:
-                resp = await client.post(self.webhook_url, json=payload)
-                resp.raise_for_status()
-                logger.info(f"Slack alert sent for {feature_id}")
+            @retry(
+                stop=stop_after_attempt(3),
+                wait=wait_exponential(multiplier=1, min=2, max=10),
+                retry=retry_if_exception_type((httpx.HTTPStatusError, httpx.RequestError))
+            )
+            async def _post_slack():
+                async with httpx.AsyncClient() as client:
+                    resp = await client.post(self.webhook_url, json=payload)
+                    if resp.status_code == 429 or resp.status_code >= 500:
+                        resp.raise_for_status()
+                    return resp
+
+            await _post_slack()
+            logger.info(f"Slack alert sent for {feature_id}")
         except Exception as e:
             logger.error(f"Failed to send Slack alert: {e}")

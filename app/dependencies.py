@@ -35,9 +35,7 @@ async def get_current_org(credentials: HTTPAuthorizationCredentials = Security(s
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Unable to parse authentication token: {str(e)}")
 
-async def get_current_org_mock():
-    """Mock dependency for local testing without tokens"""
-    return "default_org"
+
 
 async def get_super_admin(credentials: HTTPAuthorizationCredentials = Security(security), db: AsyncSession = Depends(get_db)):
     """

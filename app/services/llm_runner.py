@@ -3,7 +3,8 @@ import time
 import asyncio
 from typing import Any
 import openai
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, RateLimitError, APIConnectionError, APIError
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from app.config import settings
 
 client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY.get_secret_value())
@@ -30,13 +31,21 @@ class LLMRunner:
 
             start_time = time.time()
             try:
-                response = await client.chat.completions.create(
-                    model=self.model,
-                    messages=messages,
-                    temperature=self.temperature,
-                    max_tokens=self.max_tokens,
-                    response_format={ "type": "json_object" }
+                @retry(
+                    stop=stop_after_attempt(settings.MAX_RETRIES),
+                    wait=wait_exponential(multiplier=1, min=2, max=10),
+                    retry=retry_if_exception_type((RateLimitError, APIConnectionError, APIError))
                 )
+                async def _call_openai():
+                    return await client.chat.completions.create(
+                        model=self.model,
+                        messages=messages,
+                        temperature=self.temperature,
+                        max_tokens=self.max_tokens,
+                        response_format={ "type": "json_object" }
+                    )
+                
+                response = await _call_openai()
                 
                 content = response.choices[0].message.content
                 latency_ms = (time.time() - start_time) * 1000
