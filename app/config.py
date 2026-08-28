@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     RATE_LIMIT_PER_MINUTE: int = 60   # Per-IP rate limit
     RATE_LIMIT_EVAL_PER_HOUR: int = 10  # Eval trigger rate limit
     ENVIRONMENT: str = "development"
+    RESEND_API_KEY: SecretStr | None = None
     CLERK_JWKS_URL: str = "https://clerk.com/.well-known/jwks.json" # Replace with actual Clerk frontend API url in prod
 
     # --- LLM ---
