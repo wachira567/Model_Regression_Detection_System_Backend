@@ -96,3 +96,31 @@ async def elevate_user(
     
     status = "elevated to Super Admin" if user.is_superadmin else "demoted to normal user"
     return {"message": f"User {user.email} successfully {status}"}
+
+@router.get("/stats")
+async def get_platform_stats(
+    admin: User = Depends(get_super_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    from app.models.eval_run import EvalRun
+    from app.models.semantic_cache import SemanticCache
+    from app.models.routing_decision import RoutingDecision
+    
+    users_query = await db.execute(select(func.count(User.id)))
+    total_users = users_query.scalar() or 0
+    
+    evals_query = await db.execute(select(func.count(EvalRun.id)))
+    total_evals = evals_query.scalar() or 0
+    
+    cache_query = await db.execute(select(func.count(SemanticCache.id)))
+    total_cache_items = cache_query.scalar() or 0
+    
+    routing_query = await db.execute(select(func.count(RoutingDecision.id)))
+    total_routing_decisions = routing_query.scalar() or 0
+    
+    return {
+        "total_users": total_users,
+        "total_eval_runs": total_evals,
+        "total_cache_items": total_cache_items,
+        "total_routing_decisions": total_routing_decisions
+    }
