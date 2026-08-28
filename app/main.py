@@ -9,7 +9,6 @@ from app.middleware import (
     SecurityHeadersMiddleware,
     RequestIDMiddleware,
     add_error_handler_middleware,
-    APIKeyAuthMiddleware,
 )
 from app.api.router import router as api_router
 
@@ -25,7 +24,7 @@ def create_app() -> FastAPI:
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RateLimitMiddleware)
     app.add_middleware(RequestIDMiddleware)
-    app.add_middleware(APIKeyAuthMiddleware)
+    # APIKeyAuthMiddleware removed: JWT auth via dependencies handles security
     add_cors_middleware(app)
     add_error_handler_middleware(app)
     
