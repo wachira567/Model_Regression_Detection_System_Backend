@@ -13,6 +13,7 @@ from app.models.experiment_assignment import ExperimentAssignment
 from app.models.production_log import ProductionLog
 from app.models.routing_decision import RoutingDecision
 from app.models.feature_flag import FeatureFlag
+from app.models.trace import Trace
 
 __all__ = [
     "Base",
@@ -29,5 +30,6 @@ __all__ = [
     "ExperimentAssignment",
     "ProductionLog",
     "RoutingDecision",
-    "FeatureFlag"
+    "FeatureFlag",
+    "Trace"
 ]

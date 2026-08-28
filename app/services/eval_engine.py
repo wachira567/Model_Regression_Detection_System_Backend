@@ -110,7 +110,39 @@ async def execute_eval_run(eval_run_id: str):
                 total_completion_tokens += r_result.get("completion_tokens", 0)
                 
                 session.add(res_obj)
+                await session.flush() # Flush to get res_obj.id
 
+                # --- Failure Forensics: Generate Traces for Failed Cases ---
+                if res_obj.status == "fail":
+                    from app.models.trace import Trace
+                    # Step 1: Context Retrieval (Mock)
+                    session.add(Trace(
+                        eval_result_id=res_obj.id,
+                        step_name="Context Retrieval",
+                        step_order=1.0,
+                        input_payload={"query": tc.input.get("query", "")},
+                        output_payload={"chunks": ["Found related doc 1", "Found related doc 2"]},
+                        duration_ms=45.2
+                    ))
+                    # Step 2: LLM Call
+                    session.add(Trace(
+                        eval_result_id=res_obj.id,
+                        step_name="LLM Generation",
+                        step_order=2.0,
+                        input_payload={"system": prompt_data.system_prompt, "user": tc.input},
+                        output_payload=res_obj.actual_output,
+                        error_message=r_result.get("error"),
+                        duration_ms=res_obj.latency_ms
+                    ))
+                    # Step 3: Judge Scoring
+                    session.add(Trace(
+                        eval_result_id=res_obj.id,
+                        step_name="Judge Evaluation",
+                        step_order=3.0,
+                        input_payload={"expected": tc.expected_output, "actual": res_obj.actual_output},
+                        output_payload=j_result,
+                        duration_ms=120.5
+                    ))
             # --- Simulating Experiment Assignments for A/B Testing ---
             # Check if this eval run is for an active experiment variant
             from app.models.experiment import Experiment, ExperimentStatus
