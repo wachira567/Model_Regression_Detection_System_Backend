@@ -43,6 +43,8 @@ jobs:
     - name: Run Database Migrations
       env:
         DATABASE_URL: postgresql+asyncpg://postgres:password@localhost:5432/eval_db
+        OPENAI_API_KEY: sk-dummy
+        API_SECRET_KEY: thisisaverylongsecretkeywhichisatleast32charslong
       run: |
         alembic upgrade head
         
