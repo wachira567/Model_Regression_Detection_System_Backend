@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, HTTPException, BackgroundTasks, Depends
 import hmac
 import hashlib
 from app.config import settings
-from app.services.eval_engine import execute_eval_run
+from app.services.eval_engine import execute_fast_eval_run
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.models.eval_run import EvalRun
@@ -54,7 +54,7 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks, db
         db.add(eval_run)
         await db.commit()
         
-        background_tasks.add_task(execute_eval_run, str(eval_run.id))
+        background_tasks.add_task(execute_fast_eval_run, str(eval_run.id))
         return {"message": "CI Eval run triggered"}
         
     return {"message": "No active config found"}
