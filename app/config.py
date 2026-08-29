@@ -73,9 +73,28 @@ class Settings(BaseSettings):
             v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
         if v.startswith("postgres://"):
             v = v.replace("postgres://", "postgresql+asyncpg://", 1)
-        # Asyncpg doesn't support sslmode=require & channel_binding in the URL natively through SQLAlchemy
+        # Asyncpg uses ssl=require instead of sslmode=require, and drops channel_binding
         if "?" in v:
-            v = v.split("?")[0]
+            base, qs = v.split("?", 1)
+            params = qs.split("&")
+            new_params = []
+            for p in params:
+                if p == "sslmode=require":
+                    new_params.append("ssl=require")
+                elif p.startswith("sslmode="):
+                    pass
+                elif p.startswith("channel_binding"):
+                    pass
+                else:
+                    new_params.append(p)
+            if new_params:
+                v = base + "?" + "&".join(new_params)
+            else:
+                v = base
+        elif "neon.tech" in v:
+            # Force SSL for Neon if no query string was provided
+            v += "?ssl=require"
+            
         return v
 
     @field_validator("API_SECRET_KEY")
