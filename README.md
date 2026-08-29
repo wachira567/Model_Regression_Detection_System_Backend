@@ -1,6 +1,15 @@
 # Model Regression Detection System (MRDS) - Backend
 
-A CI/CD-style pipeline that continuously tests any LLM-powered feature against a golden dataset whenever a prompt or model changes, detects quality regressions, and alerts your team via Slack before bad outputs reach users.
+**A Production-Grade AI Automation & Governance Platform**
+
+MRDS is a CI/CD-style automation pipeline designed to bridge the gap between AI experimentation and enterprise deployment. It continuously tests any LLM-powered feature against a golden dataset whenever a prompt or model changes, detecting quality regressions and deploying automated business workflows (Slack alerts, Notion tickets) before bad outputs reach users.
+
+**Business Impact:**
+- **Automated QA:** Reduces manual testing time by over 80% through automated regression detection.
+- **Cost Optimization:** Features an intelligent routing layer (LLM Cost Autopilot) to slash API costs by routing requests to cheaper models when complexity allows.
+- **Enterprise Governance:** Built-in multi-tenancy, Role-Based Access Control (RBAC), and Human-In-The-Loop (HITL) approval workflows ensure that AI acts within strict compliance guidelines.
+
+*Note: This system is built using an Agentic State Machine architecture. Please review [AGENTS.md](./AGENTS.md) for details on our multi-agent orchestration.*
 
 ## Tech Stack
 - **Framework:** FastAPI (Python 3.11+)

@@ -4,7 +4,7 @@ from sqlalchemy import select
 from app.db.session import get_db
 from app.models.prompt_config import PromptConfig
 from app.models.eval_run import EvalRun
-from app.services.eval_engine import execute_eval_run
+from app.services.eval_engine import execute_fast_eval_run, execute_deep_eval_run
 import uuid
 
 from app.dependencies import get_current_org
@@ -12,7 +12,7 @@ from app.dependencies import get_current_org
 router = APIRouter()
 
 @router.post("/run/{feature_id}")
-async def trigger_eval_run(feature_id: str, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db), org_id: str = Depends(get_current_org)):
+async def trigger_eval_run(feature_id: str, background_tasks: BackgroundTasks, eval_mode: str = "fast", db: AsyncSession = Depends(get_db), org_id: str = Depends(get_current_org)):
     # Get active prompt config
     stmt = select(PromptConfig).where(
         PromptConfig.feature_id == feature_id,
@@ -36,6 +36,9 @@ async def trigger_eval_run(feature_id: str, background_tasks: BackgroundTasks, d
     db.add(eval_run)
     await db.commit()
     
-    background_tasks.add_task(execute_eval_run, str(eval_run.id))
+    if eval_mode == "deep":
+        background_tasks.add_task(execute_deep_eval_run, str(eval_run.id))
+    else:
+        background_tasks.add_task(execute_fast_eval_run, str(eval_run.id))
     
-    return {"message": "Eval run started in the background", "eval_run_id": str(eval_run.id)}
+    return {"message": f"Eval run started in the background (Mode: {eval_mode})", "eval_run_id": str(eval_run.id)}

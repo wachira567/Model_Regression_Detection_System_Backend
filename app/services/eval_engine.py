@@ -16,8 +16,8 @@ from app.db.session import AsyncSessionLocal
 
 logger = logging.getLogger(__name__)
 
-async def execute_eval_run(eval_run_id: str):
-    logger.info(f"Starting async eval run for {eval_run_id}")
+async def execute_fast_eval_run(eval_run_id: str):
+    logger.info(f"Starting async FAST eval run for {eval_run_id}")
     
     async with AsyncSessionLocal() as session:
         # Load EvalRun
@@ -201,3 +201,96 @@ async def execute_eval_run(eval_run_id: str):
             eval_run.status = "failed"
             eval_run.error_message = str(e)
             await session.commit()
+
+async def execute_deep_eval_run(eval_run_id: str):
+    from app.agents.supervisor import build_eval_graph
+    logger.info(f"Starting async DEEP AGENTIC eval run for {eval_run_id}")
+    
+    graph = build_eval_graph()
+    
+    async with AsyncSessionLocal() as session:
+        eval_run = await session.get(EvalRun, eval_run_id)
+        if not eval_run:
+            logger.error("EvalRun not found")
+            return
+            
+        prompt_config = await session.get(PromptConfig, eval_run.prompt_config_id)
+        eval_run.status = "running"
+        await session.commit()
+        
+        try:
+            # 1. Load dataset & Prompt
+            dataset_loader = DatasetLoader(settings.GOLDEN_DATASET_DIR)
+            target_dataset = next((d for d in dataset_loader.load_all() if d.feature_id == prompt_config.feature_id), None)
+            
+            prompt_loader = PromptLoader(settings.PROMPTS_DIR)
+            prompt_data = next((p for p in prompt_loader.load_all() if p.id == prompt_config.feature_id and p.version == prompt_config.version), None)
+            
+            if not target_dataset or not prompt_data:
+                raise ValueError("Dataset or Prompt not found")
+                
+            runner = LLMRunner(
+                model=prompt_data.model,
+                temperature=prompt_data.temperature,
+                max_tokens=prompt_data.max_tokens,
+                system_prompt=prompt_data.system_prompt
+            )
+            
+            # Execute queries first
+            inputs = [tc.input for tc in target_dataset.test_cases]
+            runner_results = await runner.run_batch(inputs, few_shot_examples=prompt_data.few_shot_examples)
+            
+            total_cases = len(target_dataset.test_cases)
+            passed = 0
+            
+            for tc, r_result in zip(target_dataset.test_cases, runner_results):
+                if r_result["status"] == "success":
+                    # Execute LangGraph Deep Eval for this test case
+                    initial_state = {
+                        "input": tc.input,
+                        "expected_output": tc.expected_output,
+                        "actual_output": r_result.get("output", {}),
+                        "issues": []
+                    }
+                    
+                    final_state = await graph.ainvoke(initial_state)
+                    
+                    status = final_state.get("status", "fail")
+                    if status == "pass":
+                        passed += 1
+                        
+                    res_obj = EvalResult(
+                        eval_run_id=eval_run.id,
+                        test_case_id=tc.id,
+                        input=tc.input,
+                        expected_output=tc.expected_output,
+                        actual_output=r_result.get("output", {}),
+                        category_match=(status == "pass"),  # simplifying mapping
+                        relevance_score=final_state.get("final_score", 0),
+                        latency_ms=r_result.get("latency_ms", 0),
+                        prompt_tokens=r_result.get("prompt_tokens", 0),
+                        completion_tokens=r_result.get("completion_tokens", 0),
+                        status=status,
+                        judge_reasoning=f"Factual: {final_state.get('factual_reasoning')} | Logical: {final_state.get('logical_reasoning')} | Issues: {final_state.get('issues')}"
+                    )
+                    session.add(res_obj)
+            
+            eval_run.total_cases = total_cases
+            eval_run.passed_cases = passed
+            eval_run.failed_cases = total_cases - passed
+            eval_run.overall_accuracy = passed / total_cases if total_cases > 0 else 0
+            
+            eval_run.status = "completed"
+            eval_run.completed_at = datetime.utcnow()
+            await session.commit()
+            
+            # 7. Check Drift
+            drift_engine = DriftEngine(session)
+            await drift_engine.detect_drift(prompt_config.feature_id, str(eval_run.id))
+            
+        except Exception as e:
+            logger.exception(f"Deep Eval run failed")
+            eval_run.status = "failed"
+            eval_run.error_message = str(e)
+            await session.commit()
+
